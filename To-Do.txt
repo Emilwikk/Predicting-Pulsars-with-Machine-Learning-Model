@@ -1,0 +1,6 @@
+Choose type of model:
+[Logistic regression, Random Forest, Decision tree, Ensemble techniques, Naive-Bayes other]
+
+Cross validation
+Hyperparameter tuning
+Dimensionality reduction?
