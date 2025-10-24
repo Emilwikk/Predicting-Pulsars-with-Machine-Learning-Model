@@ -68,3 +68,5 @@ dmypy.json
 
 # Profiling
 .prof
+
+.DS_store
