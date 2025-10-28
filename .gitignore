@@ -69,3 +69,7 @@ dmypy.json
 # Profiling
 .prof
 
+<<<<<<< HEAD
+=======
+.DS_store
+>>>>>>> e7639534fbdc050a9d14ebf04b897bb462a0a9b3

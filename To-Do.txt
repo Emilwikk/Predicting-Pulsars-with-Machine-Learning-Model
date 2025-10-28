@@ -1,0 +1,9 @@
+Choose type of model:
+[Logistic regression, Random Forest, Decision tree, Ensemble techniques, Naive-Bayes other]
+
+Cross validation
+Hyperparameter tuning
+Dimensionality reduction?
+Early stopping
+
+Clean data with KNN? For some samples one feature is missing.

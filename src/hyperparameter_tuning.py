@@ -1,0 +1,17 @@
+from sklearn.model_selection import GridSearchCV
+import numpy as np
+
+def hyper_parameter_tuning(model,X_train,y_train,learning_rate_min,learning_rate_max,learning_rate_step,max_depth_min,max_depth_max,max_depth_step,
+                           reg_lambda_min,reg_lambda_max,reg_lambda_step,reg_alpha_min,reg_alpha_max,reg_alpha_step):
+    parameter_grid = {
+    "lgbmclassifier__max_depth" : np.arange(max_depth_min,max_depth_max,max_depth_step),
+    "lgbmclassifier__learning_rate" : np.arange(learning_rate_min,learning_rate_max,learning_rate_step),
+    "lgbmclassifier__reg_lambda" : np.arange(reg_lambda_min,reg_lambda_max,reg_lambda_step),
+    "lgbmclassifier__reg_alpha" : np.arange(reg_alpha_min,reg_alpha_max,reg_alpha_step)
+    }
+    print("Finding best hyperparameters...")
+    grid = GridSearchCV(estimator=model,param_grid=parameter_grid,cv=5,scoring='roc_auc',n_jobs=-1,verbose=1)
+    
+    grid.fit(X_train,y_train)
+    
+    return grid.best_params_, grid.best_score_

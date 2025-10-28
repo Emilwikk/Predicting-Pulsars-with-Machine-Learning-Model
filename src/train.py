@@ -1,20 +1,19 @@
-# Remember Cross validation, hyperparameter tuning, dimensionality reduction
 from lightgbm import LGBMClassifier
 import time
 import pandas as pd
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 import os
 import numpy as np
 import joblib
+from hyperparameter_tuning import hyper_parameter_tuning
 
 # Hyperparameters
-learning_rate = 0.1
-max_depth = 9
+learning_rate_min,learning_rate_max,learning_rate_step = 0.1, 0.2, 0.1
+max_depth_min, max_depth_max, max_depth_step = 5, 6, 1
 n_estimators = 100
-reg_lambda = 0  # Like L2 (Ridge) regularization on leaf nodes
-reg_alpha = 0   # Like L1 (Lasso) regularization on leaf nodes
+reg_lambda_min, reg_lambda_max, reg_lambda_step = 0, 0.1, 0.1  # Like L2 (Ridge) regularization on leaf nodes
+reg_alpha_min, reg_alpha_max, reg_alpha_step = 0, 0.1, 0.1   # Like L1 (Lasso) regularization on leaf nodes
 num_leaves = 35
 
 # Read data
@@ -32,14 +31,28 @@ print(X_train.head())
 
 pos = (y_train==1).sum()
 neg = (y_train==0).sum()
-spw = pos/neg
+spw = neg/pos
 
-LGBM_model = make_pipeline(StandardScaler(),  
-           LGBMClassifier(n_estimators=n_estimators, random_state=54,max_depth=max_depth,learning_rate=learning_rate,reg_alpha=reg_alpha,reg_lambda=reg_lambda,
+LGBM_model = make_pipeline(LGBMClassifier(n_estimators=n_estimators, random_state=54,
                           n_jobs=-1, num_leaves=num_leaves, scale_pos_weight=spw))
-start_time_train = time.time()          # start the timer for training
-LGBM_model.fit(X_train, y_train)  
-end_time_train = time.time()  
-joblib.dump(LGBM_model, "model.pkl")
 
-print(f"Training time: {round(end_time_train-start_time_train,3)} s")
+start_time_hpt = time.time()
+best_params, best_score = hyper_parameter_tuning(LGBM_model,X_train,y_train,learning_rate_min, learning_rate_max, learning_rate_step, 
+                                                 max_depth_min, max_depth_max, max_depth_step,
+                                                 reg_lambda_min, reg_lambda_max, reg_lambda_step, reg_alpha_min, reg_alpha_max, reg_alpha_step)
+end_time_hpt = time.time()
+print(f"Hyperparameter tuning time: {end_time_hpt-start_time_hpt}\nOptimal hyperparameters: {best_params}\nCross validation score: {best_score}")
+
+# Train model with optimal hyperparameters
+final_LGBM_model = make_pipeline(LGBMClassifier(n_estimators=n_estimators, random_state=54,
+                          n_jobs=-1, num_leaves=num_leaves, scale_pos_weight=spw, learning_rate=best_params['lgbmclassifier__learning_rate'],
+                          max_depth=best_params['lgbmclassifier__max_depth'],
+                          reg_alpha=best_params['lgbmclassifier__reg_alpha'],
+                          reg_lambda=best_params['lgbmclassifier__reg_lambda']))
+
+start_time_train = time.time() 
+final_LGBM_model.fit(X_train, y_train)  
+end_time_train = time.time()  
+joblib.dump(final_LGBM_model, "model.pkl")
+
+print(f"Final model training time: {round(end_time_train-start_time_train,3)} s")
