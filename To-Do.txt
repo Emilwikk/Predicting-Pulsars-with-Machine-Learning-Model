@@ -5,5 +5,6 @@ Cross validation
 Hyperparameter tuning
 Dimensionality reduction?
 Early stopping
+Test set
 
 Clean data with KNN? For some samples one feature is missing.
