@@ -12,7 +12,7 @@ def hyper_parameter_tuning(model,X_train,y_train,n_iter,learning_rate_min,learni
     "knnimputer__n_neighbors" : np.arange(n_neighbors_min,n_neighbors_max,n_neighbors_step)
     }
     print("Finding best hyperparameters...")
-    grid = RandomizedSearchCV(estimator=model,param_distributions=parameter_distributions,n_iter=n_iter,cv=5,scoring='roc_auc',n_jobs=-1,verbose=1)
+    grid = RandomizedSearchCV(estimator=model,param_distributions=parameter_distributions,n_iter=n_iter,cv=5,scoring='f1',n_jobs=-1,verbose=1)
     
     grid.fit(X_train,y_train)
     

@@ -9,7 +9,9 @@ import joblib
 from hyperparameter_tuning import hyper_parameter_tuning
 from sklearn.impute import KNNImputer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import classification_report
+from sklearn.model_selection import learning_curve
+from matplotlib import pyplot as plt
 
 # Hyperparameter tuning ranges
 learning_rate_min,learning_rate_max,learning_rate_step = 0.05, 0.45, 0.1
@@ -17,11 +19,10 @@ max_depth_min, max_depth_max, max_depth_step = 5, 11, 2
 n_estimators = 100
 reg_lambda_min, reg_lambda_max, reg_lambda_step = 0, 0.8, 0.2  # Like L2 (Ridge) regularization on leaf nodes
 reg_alpha_min, reg_alpha_max, reg_alpha_step = 0, 0.8, 0.2   # Like L1 (Lasso) regularization on leaf nodes
-num_leaves = 35
 n_neighbors_min, n_neighbors_max, n_neighbors_step = 3, 9, 2
 
 # Random search iterations in hyperparameter tuning
-n_iter = 100
+n_iter = 10
 
 # Read data
 script_dir = os.path.dirname(__file__)
@@ -58,7 +59,7 @@ spw = neg/pos
 
 LGBM_model = make_pipeline( KNNImputer(),
                             LGBMClassifier(n_estimators=n_estimators, random_state=54,
-                                          n_jobs=-1, num_leaves=num_leaves, scale_pos_weight=spw
+                                          n_jobs=-1, scale_pos_weight=spw
                                           ))
 
 start_time_hpt = time.time()
@@ -72,7 +73,7 @@ print(f"Hyperparameter tuning time: {end_time_hpt-start_time_hpt}\nOptimal hyper
 # Train model with optimal hyperparameters
 final_LGBM_model = make_pipeline(KNNImputer(n_neighbors=best_params['knnimputer__n_neighbors']),
                                  LGBMClassifier(n_estimators=n_estimators, random_state=54,
-                                    n_jobs=-1, num_leaves=num_leaves, scale_pos_weight=spw, learning_rate=best_params['lgbmclassifier__learning_rate'],
+                                    n_jobs=-1, scale_pos_weight=spw, learning_rate=best_params['lgbmclassifier__learning_rate'],
                                     max_depth=best_params['lgbmclassifier__max_depth'],
                                     reg_alpha=best_params['lgbmclassifier__reg_alpha'],
                                     reg_lambda=best_params['lgbmclassifier__reg_lambda']))
@@ -83,6 +84,11 @@ final_LGBM_model.fit(X_tr, y_tr,lgbmclassifier__eval_set=[(X_val_imp,y_val)])
 end_time_train = time.time()
 # Save model as .pkl file  
 joblib.dump(final_LGBM_model, "model.pkl")
+
+train_sizes, train_scores, val_scores = learning_curve(final_LGBM_model, X_train, y_train, cv=5, scoring="accuracy")
+plt.plot(train_sizes, train_scores.mean(axis=1), label='Train')
+plt.plot(train_sizes, val_scores.mean(axis=1), label='Val')
+plt.legend(); plt.show()
 
 print(f"Hyperparameter tuning time: {end_time_hpt-start_time_hpt}\nOptimal hyperparameters: {best_params}\nCross validation score: {best_score}")
 print(f"Final model training time: {round(end_time_train-start_time_train,3)} s")

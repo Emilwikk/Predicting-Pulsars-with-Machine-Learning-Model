@@ -2,6 +2,9 @@ import joblib
 import pandas as pd
 import os
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from matplotlib import pyplot as plt
 
 # Read data
 script_dir = os.path.dirname(__file__)
@@ -31,5 +34,12 @@ model = joblib.load("model.pkl")
 print(f"Probability that an example positive sample is positive: {model.predict_proba(X_sample_true)[0][1]}\nProbability that a negative example sample is positive: {model.predict_proba(X_sample_false)[0][1]}")
 
 y_pred = model.predict(X_test)
-roc_auc = roc_auc_score(y_test,y_pred)
-print(f"Reciever Operating Characteristic - Area Under the Curve score (roc_auc) for the model: {roc_auc}")
+cla_rep = classification_report(y_test,y_pred)
+#print(f"Reciever Operating Characteristic - Area Under the Curve score (roc_auc) for the model: {roc_auc}")
+print(cla_rep)
+
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Non-pulsar", "Pulsar"])
+disp.plot(cmap="Blues")
+plt.title("Confusion matrix")
+plt.show()
